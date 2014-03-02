@@ -11,3 +11,5 @@
 /Symmetric Grinder Console.launch
 /Symmetric Grinder TCPProxy.launch
 /.project
+/bin
+/.classpath
