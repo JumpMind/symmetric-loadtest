@@ -1,4 +1,4 @@
-from org.jumpmind.symmetric.loadtest import SymmetricProtocolVariableReplacer
+from org.jumpmind.symmetric.loadtest import SymmetricProtocolHelper
 from java.lang import String
 from java.lang import Integer
 from java.lang import Long
@@ -29,36 +29,43 @@ serverPath = grinder.properties.get('server.path');
 
 log.info('The server path is %s' % serverPath)
 
-variableReplacer = SymmetricProtocolVariableReplacer(grinder)      
+helper = SymmetricProtocolHelper(grinder)      
 
 log.info('The variable replacer was created')
 
-httpPush = HTTPRequest(url=url, headers=headers)
-
-httpPull = HTTPRequest(url=url, headers=headers)
+httpRequest = HTTPRequest(url=url, headers=headers)
 
 log.info('The HTTP request object was created')     
 
-#def pull():
-
-
-def push():      
-      
-    token_nodeId = variableReplacer.nodeId
+def pull():
+    token_nodeId = helper.nodeId
     token_securityToken = grinder.properties.getProperty('server.auth.token', 'test')      
 
-    result = httpPush.HEAD(serverPath + '/push' +
+    result = httpRequest.GET(serverPath + '/pull' + '?nodeId=' + token_nodeId +
+      '&securityToken=' + token_securityToken)
+      
+    if result.statusCode == 200:
+        ackData = helper.generateAck(String(result.data))
+        result = httpRequest.POST(serverPath + '/ack' + '?nodeId=' + token_nodeId +
+                                '&securityToken=' + token_securityToken, ackData)
+    else:
+        grinder.statistics.forCurrentTest.success = 0 
+    
+
+def push():      
+    token_nodeId = helper.nodeId
+    token_securityToken = grinder.properties.getProperty('server.auth.token', 'test')      
+
+    result = httpRequest.HEAD(serverPath + '/push' +
       '?nodeId=' +
       token_nodeId +
       '&securityToken=' +
-      token_securityToken, None,
-      ( httpUtilities.basicAuthorizationHeader('username', 'p@ssw0rd'), ))
+      token_securityToken)
       
     if result.statusCode == 200:
-        result = httpPush.PUT(serverPath + '/push' + '?nodeId=' + token_nodeId +
+        result = httpRequest.PUT(serverPath + '/push' + '?nodeId=' + token_nodeId +
                                 '&securityToken=' + token_securityToken,
-         variableReplacer.generate(),
-         ( httpUtilities.basicAuthorizationHeader('username', 'p@ssw0rd'), ))
+         helper.generateBatchPayload())
         
         resultString = String(String(result.data).toUpperCase())
         
@@ -70,7 +77,7 @@ def push():
 
     return result
 
-#pullTest = Test(1, 'PULL').wrap(pull)
+pullTest = Test(1, 'PULL').wrap(pull)
 pushTest = Test(2, 'PUSH').wrap(push)
 
 log.info('The Test objects were created')
@@ -81,9 +88,9 @@ class TestRunner:
 
     grinder.logger.info('Checking grinder.agents to see if test needs to run')
       
-    locationCount = len(variableReplacer.getLocationIds())
+    locationCount = len(helper.getLocationIds())
     if  locationCount > 0:      
-        grinder.logger.info("Found %d locations for key %s" % (locationCount, variableReplacer.getLocationPropertyKey()))
+        grinder.logger.info("Found %d locations for key %s" % (locationCount, helper.getLocationPropertyKey()))
         maxAgents = grinder.properties.getInt('grinder.agents', 100)
         if maxAgents <= grinder.agentNumber:   
             grinder.logger.info('Not running agent %d because the max number of agents was %d' % (grinder.agentNumber, maxAgents))      
@@ -91,13 +98,13 @@ class TestRunner:
         	
         grinder.logger.info('Running agent')
         
- #       pullTest() 
+        pullTest() 
         pushTest()            
         
         grinder.sleep(Long.parseLong(grinder.properties.get('time.between.sync.ms')))
         
     else:
-        grinder.logger.info('No location assigned to this agent: %s' % variableReplacer.getLocationPropertyKey())
+        grinder.logger.info('No location assigned to this agent: %s' % helper.getLocationPropertyKey())
     
 
 

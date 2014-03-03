@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -18,13 +20,17 @@ import org.apache.commons.lang.StringUtils;
 import org.jumpmind.db.util.BinaryEncoding;
 import org.jumpmind.symmetric.io.data.Batch;
 import org.jumpmind.symmetric.io.data.Batch.BatchType;
+import org.jumpmind.symmetric.io.data.CsvConstants;
 import org.jumpmind.symmetric.io.data.CsvData;
 import org.jumpmind.symmetric.io.data.DataProcessor;
 import org.jumpmind.symmetric.io.data.reader.ProtocolDataReader;
 import org.jumpmind.symmetric.io.data.writer.ProtocolDataWriter;
+import org.jumpmind.symmetric.web.WebConstants;
 import org.slf4j.Logger;
 
-public class SymmetricProtocolVariableReplacer {
+import HTTPClient.NVPair;
+
+public class SymmetricProtocolHelper {
 
     protected ScriptContext scriptContext;
     protected GrinderProperties properties;
@@ -35,7 +41,7 @@ public class SymmetricProtocolVariableReplacer {
 
     protected int returnsCount = 0;
 
-    public SymmetricProtocolVariableReplacer(ScriptContext scriptContext) {
+    public SymmetricProtocolHelper(ScriptContext scriptContext) {
         this.scriptContext = scriptContext;
         this.properties = scriptContext.getProperties();
         this.logger = scriptContext.getLogger();
@@ -51,7 +57,7 @@ public class SymmetricProtocolVariableReplacer {
                 logger.error("Could not find template for {}", name);
                 templates.put(name, "");
             }
-        } 
+        }
         return templates.get(name);
     }
 
@@ -100,8 +106,7 @@ public class SymmetricProtocolVariableReplacer {
         if (locations != null && locations.length > 0) {
             locationId = locations[new Random(System.currentTimeMillis()).nextInt(locations.length)];
         }
-
-        logger.warn("The location chosen was {}", locationId);
+        logger.info("The location chosen was {}", locationId);
         return locationId;
     }
 
@@ -116,7 +121,7 @@ public class SymmetricProtocolVariableReplacer {
         return getNodeInfo().nodeId;
     }
 
-    public byte[] generate() {
+    public byte[] generateBatchPayload() {
         int numberOfBatches = getRandomNumber("max.number.of.batches");
         StringBuilder csv = new StringBuilder();
         String[] channels = properties.getProperty("channel.names", "default").split(",");
@@ -128,7 +133,7 @@ public class SymmetricProtocolVariableReplacer {
         return replace(csv.toString().getBytes());
     }
 
-    public byte[] replace(byte[] input) {
+    protected byte[] replace(byte[] input) {
         try {
             NodeInfo nodeInfo = getNodeInfo();
             StringReader reader = new StringReader(new String(input));
@@ -143,6 +148,21 @@ public class SymmetricProtocolVariableReplacer {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public NVPair[] generateAck(String batchPayload) {
+        List<NVPair> formData = new ArrayList<NVPair>();
+        String[] lines = StringUtils.split(batchPayload, "\n");
+        String nodeId = getNodeId();
+        for (String line : lines) {
+            line = line.trim();
+            if (line.startsWith(CsvConstants.BATCH)) {
+                String batchId = StringUtils.split(line, ",")[1];
+                formData.add(new NVPair(WebConstants.ACK_BATCH_NAME + batchId, WebConstants.ACK_BATCH_OK));
+                formData.add(new NVPair(WebConstants.ACK_NODE_ID + batchId, nodeId));
+            }
+        }
+        return formData.toArray(new NVPair[formData.size()]);
     }
 
     protected ProtocolDataWriter buildProtocolDataWriter(final NodeInfo nodeInfo,
