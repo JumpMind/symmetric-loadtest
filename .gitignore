@@ -13,3 +13,5 @@
 /.project
 /bin
 /.classpath
+/.gradle
+/.settings
