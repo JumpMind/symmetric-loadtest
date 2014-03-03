@@ -2,11 +2,8 @@ SymmetricDS Grinder Load Test
 ==================
 This project demonstrates how you can load test SymmetricDS using [The Grinder] (http://grinder.sourceforge.net) framework.
 
-This example was built as a gradle project and tested from Eclipse.  If you run the following command the Eclipse project artifacts will be generated and you will be able to import this project as an Eclipse project.
+This example was built as a gradle project and tested from Eclipse.  If you run the `gradle cleanEclipse eclipse` command, the Eclipse project artifacts will be generated and you will be able to import this project as an Eclipse project.
 
-```
-gradle cleanEclipse eclipse
-```
 
 At the root of the project you can find Eclipse shortcuts that launch the Grinder console and up to three agents.  
 
