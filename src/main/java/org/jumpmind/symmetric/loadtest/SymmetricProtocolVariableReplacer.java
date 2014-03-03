@@ -51,7 +51,7 @@ public class SymmetricProtocolVariableReplacer {
                 logger.error("Could not find template for {}", name);
                 templates.put(name, "");
             }
-        }
+        } 
         return templates.get(name);
     }
 
