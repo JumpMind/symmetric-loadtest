@@ -1,2 +1,2 @@
-symmetric-loadtest
+SymmmetricDS Grinder Load Test
 ==================
