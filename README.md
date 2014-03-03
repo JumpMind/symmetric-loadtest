@@ -8,4 +8,4 @@ This example was built as a gradle project and tested from Eclipse.  There are E
 gradle cleanEclipse eclipse
 ```
 
-
+When running from outside of Eclipse you can install and run agents pointing back to the Grinder console using [instructions] (http://grinder.sourceforge.net/g3/getting-started.html#howtostart) found on the Grinder website.
