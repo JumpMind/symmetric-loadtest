@@ -10,4 +10,6 @@ gradle cleanEclipse eclipse
 
 When running from outside of Eclipse you can install and run agents pointing back to the Grinder console using [instructions] (http://grinder.sourceforge.net/g3/getting-started.html#howtostart) found on the Grinder website.
 
-The load test is driven by the [loadtest.properties] (https://github.com/JumpMind/symmetric-loadtest/raw/master/src/main/console/loadtest.properties) and [loadtest.py] (https://github.com/JumpMind/symmetric-loadtest/raw/master/src/main/console/loadtest.py).
+The load test is driven by the [loadtest.properties] (https://github.com/JumpMind/symmetric-loadtest/raw/master/src/main/console/loadtest.properties) Grinder properties file.  The properties file points to the [loadtest.py] (https://github.com/JumpMind/symmetric-loadtest/raw/master/src/main/console/loadtest.py) load test and contains additional properties that are specific to the SymmetricDS load test.
+
+loadtst.py uses [SymmetricProtocolHelper.java] (https://github.com/JumpMind/symmetric-loadtest/raw/master/src/main/java/org/jumpmind/symmetric/loadtest/SymmetricProtocolHelper.java).  The helper contains code to support the SymmetricDS protocol.
