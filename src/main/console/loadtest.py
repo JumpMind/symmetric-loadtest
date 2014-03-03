@@ -39,6 +39,9 @@ httpPull = HTTPRequest(url=url, headers=headers)
 
 log.info('The HTTP request object was created')     
 
+#def pull():
+
+
 def push():      
       
     token_nodeId = variableReplacer.nodeId
@@ -67,7 +70,8 @@ def push():
 
     return result
 
-pushTest = Test(1, 'PUSH').wrap(push)
+#pullTest = Test(1, 'PULL').wrap(pull)
+pushTest = Test(2, 'PUSH').wrap(push)
 
 log.info('The Test objects were created')
 
@@ -86,9 +90,10 @@ class TestRunner:
             return
         	
         grinder.logger.info('Running agent')
-         
+        
+ #       pullTest() 
         pushTest()            
-        # pullTest()
+        
         grinder.sleep(Long.parseLong(grinder.properties.get('time.between.sync.ms')))
         
     else:
