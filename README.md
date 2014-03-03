@@ -24,8 +24,10 @@ The _pull_ test performs a SymmetricDS pull.  It receives batch data from the se
 
 The _push_ test performs a SymmetricDS push.  It uses a configurable template file to generate batch data and pushes it to the server.  The `SymmetricProtocolHelper.java` looks for certain key columns and replaces the data with generated date.  In order to support your tables, you might need to customize this class.
 
-Both the _push_ and _pull_ jobs are configured via the `loadtest.properties` file.  They assume that nodes have been registered on the server.  The load test tool assumes that all 'testable' nodes have the same sym_node_security node_password.  The password itself if configurable.
+Both the _push_ and _pull_ jobs are configured via the `loadtest.properties` file.  They assume that nodes have been registered on the server.  The load test tool assumes that all 'testable' nodes have the same sym_node_security node_password.  The password itself is configurable.
 
-### loadtest.properties
+The example configuration pushes back a SymmetricDS heartbeat (the `sym_node_host` table).  The template file for the batch data is `heartbeat.csv`.  You use the `channel.names` property to configure the channels you want to _push_.  Channels are comma delimited.  Each channel should have a corresponding `{channel name}.csv` file.
 
-* 
+Each Grinder agent can support multiple processes which in turn can start multiple threads.  Even though you have multiple agents checking into the console only the number specified by `grinder.agent` will be used during a run.  `grinder.processes` are the number of processes that will be created.  `grinder.threads` is the number of threads each process will start.
+
+Node ids are also specificed in the `loadtest.properties`.  The `locations.agent.id.X.process.id.X` properties contain a list of location ids.  You can customize how node ids are created in `SymmetricProtocolHelper.java`.  The example will randomly select a location id for the agent and process number that is currently doing work.  It will assign a 'workstation id' as part of the node id based on the thread number.  The thread number is zero padded so that node ids look (for this example) look something like: 30444-002.
