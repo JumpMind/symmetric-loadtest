@@ -1,0 +1,17 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+repositories {
+    mavenCentral()
+    maven {
+        url "http://repository.codehaus.org"
+        url "http://clojars.org/repo"
+    }
+}
+
+dependencies {
+    compile "org.jumpmind.symmetric:symmetric-core:3.5.17"
+    compile "net.sf.grinder:grinder:3.11"
+    compile "ring:ring-core:1.1.0"
+    compile "ring:ring-servlet:1.1.0"
+}

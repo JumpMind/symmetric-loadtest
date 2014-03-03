@@ -4,7 +4,6 @@
 *.jar
 *.war
 *.ear
-/build.gradle
 /Symmetric Grinder Agent 0.launch
 /Symmetric Grinder Agent 1.launch
 /Symmetric Grinder Agent 2.launch
