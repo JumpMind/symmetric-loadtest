@@ -1,5 +1,13 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin:'application'
+
+// Run the console using: gradle -Pconsole run
+if ( project.hasProperty("console") ) {  
+    mainClassName = 'net.grinder.Console'
+} else {
+    mainClassName = 'net.grinder.Grinder'
+}
 
 repositories {
     mavenCentral()
@@ -14,4 +22,13 @@ dependencies {
     compile "net.sf.grinder:grinder:3.11"
     compile "ring:ring-core:1.1.0"
     compile "ring:ring-servlet:1.1.0"
+}
+
+run {
+    if ( project.hasProperty("console") ) {  
+        workingDir = 'src/main/console'
+        jvmArgs '-Djava.awt.headless=false'
+    } else {
+        workingDir = 'src/main/agent-0'
+    }    
 }
