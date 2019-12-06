@@ -68,7 +68,10 @@ public class SymmetricProtocolHelper {
         NodeInfo nodeInfo = nodeInfoByThread.get();
         if (nodeInfo == null) {
             nodeInfo = new NodeInfo();
-            String nodeId = storeId + "-" + workstationId;
+            String nodeId = storeId;
+            if (properties.getBoolean("locations.use.workstation", true)) {
+                nodeId += "-" + workstationId;
+            }
             nodeInfo.nodeId = nodeId;
             nodeInfo.currentBatchId = properties.getLong("batch.id.start", 42);
             nodeInfoByThread.set(nodeInfo);
