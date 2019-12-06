@@ -33,7 +33,7 @@ helper = SymmetricProtocolHelper(grinder)
 
 log.info('The variable replacer was created')
 
-httpRequest = HTTPRequest(url=url, headers=headers)
+httpRequest = HTTPRequest(url=url)
 
 log.info('The HTTP request object was created')     
 
