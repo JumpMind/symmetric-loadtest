@@ -8,12 +8,11 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
-import net.grinder.common.GrinderProperties;
-import net.grinder.script.Grinder.ScriptContext;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -29,6 +28,8 @@ import org.jumpmind.symmetric.web.WebConstants;
 import org.slf4j.Logger;
 
 import HTTPClient.NVPair;
+import net.grinder.common.GrinderProperties;
+import net.grinder.script.Grinder.ScriptContext;
 
 public class SymmetricProtocolHelper {
 
@@ -36,10 +37,9 @@ public class SymmetricProtocolHelper {
     protected GrinderProperties properties;
     protected Logger logger;
 
+    protected static Set<String> locationsInUse = new HashSet<String>();
     protected static ThreadLocal<NodeInfo> nodeInfoByThread = new ThreadLocal<NodeInfo>();
     protected static Map<String, String> templates = new HashMap<String, String>();
-
-    protected int returnsCount = 0;
 
     public SymmetricProtocolHelper(ScriptContext scriptContext) {
         this.scriptContext = scriptContext;
@@ -62,11 +62,11 @@ public class SymmetricProtocolHelper {
     }
 
     protected NodeInfo getNodeInfo() {
-        String storeId = getLocationId();
-        String workstationId = getWorkstationId();
-
         NodeInfo nodeInfo = nodeInfoByThread.get();
         if (nodeInfo == null) {
+            String storeId = getLocationId();
+            String workstationId = getWorkstationId();
+
             nodeInfo = new NodeInfo();
             String nodeId = storeId;
             if (properties.getBoolean("locations.use.workstation", true)) {
@@ -74,12 +74,11 @@ public class SymmetricProtocolHelper {
             }
             nodeInfo.nodeId = nodeId;
             nodeInfo.currentBatchId = properties.getLong("batch.id.start", 42);
+            nodeInfo.currentLocationId = storeId;
+            nodeInfo.currentWorkstationId = workstationId;
             nodeInfoByThread.set(nodeInfo);
         }
-        nodeInfo.currentLocationId = storeId;
-        nodeInfo.currentWorkstationId = workstationId;
         return nodeInfo;
-
     }
 
     public String getLocationPropertyKey() {
@@ -102,12 +101,22 @@ public class SymmetricProtocolHelper {
         return new String[0];
     }
 
-    protected String getLocationId() {
+    protected synchronized String getLocationId() {
         String locationId = null;
         logger.info("Looking up location using the key: {}", getLocationPropertyKey());
         String[] locations = getLocationIds();
         if (locations != null && locations.length > 0) {
-            locationId = locations[new Random(System.currentTimeMillis()).nextInt(locations.length)];
+            int count = 0;
+            do {
+                locationId = locations[new Random().nextInt(locations.length)];
+            } while (locationsInUse.contains(locationId) && count++ < locations.length * 10);
+            
+            if (properties.getBoolean("node.id.unique.per.thread", true)) {
+                if (locationsInUse.contains(locationId)) {
+                    throw new RuntimeException("Unable to choose unique node ID");
+                }
+                locationsInUse.add(locationId);
+            }
         }
         logger.info("The location chosen was {}", locationId);
         return locationId;
