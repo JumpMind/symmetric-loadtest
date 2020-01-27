@@ -6,6 +6,7 @@ from net.grinder.script import Test
 from net.grinder.script.Grinder import grinder
 from net.grinder.plugin.http import HTTPPluginControl, HTTPRequest
 from HTTPClient import NVPair
+import time
 connectionDefaults = HTTPPluginControl.getConnectionDefaults()
 httpUtilities = HTTPPluginControl.getHTTPUtilities()
 
@@ -19,7 +20,21 @@ connectionDefaults.defaultHeaders = \
 headers= \
   [ NVPair('Cache-Control', 'no-cache'), ]
 
-log = grinder.logger  
+log = grinder.logger
+
+current_millis = lambda: int(round(time.time() * 1000))
+
+grinder.statistics.registerDataLogExpression("Server Too Busy", "userLong0")
+grinder.statistics.registerSummaryExpression("Server Too Busy", "(+ userLong0)")
+
+grinder.statistics.registerDataLogExpression("Batches", "userLong1")
+grinder.statistics.registerSummaryExpression("Batches", "(+ userLong1)")
+
+grinder.statistics.registerDataLogExpression("Sync Time", "userDouble0")
+grinder.statistics.registerSummaryExpression("Sync Time", "(+ userDouble0)")
+
+grinder.statistics.registerSummaryExpression("Mean Sync Time", "(/ userDouble0 userLong1)")
+grinder.statistics.registerSummaryExpression("Batches Per Second", "(* (/ userLong1 period) 1000)")
 
 url = grinder.properties.get('server.url')
 
@@ -38,8 +53,9 @@ httpRequest = HTTPRequest(url=url)
 log.info('The HTTP request object was created')     
 
 def pull():
+    ts = current_millis()
     token_nodeId = helper.nodeId
-    token_securityToken = grinder.properties.getProperty('server.auth.token', 'test')      
+    token_securityToken = grinder.properties.getProperty('server.auth.token', 'test')
 
     result = httpRequest.GET(serverPath + '/pull' + '?nodeId=' + token_nodeId +
       '&securityToken=' + token_securityToken)
@@ -48,11 +64,15 @@ def pull():
         ackData = helper.generateAck(String(result.data))
         result = httpRequest.POST(serverPath + '/ack' + '?nodeId=' + token_nodeId +
                                 '&securityToken=' + token_securityToken, ackData)
+        grinder.statistics.forCurrentTest.addLong("userLong1", 1)
+        grinder.statistics.forCurrentTest.addDouble("userDouble0", (current_millis() - ts) / 1000.0)
+    elif result.statusCode == 670:
+        grinder.statistics.forCurrentTest.addLong("userLong0", 1)
     else:
-        grinder.statistics.forCurrentTest.success = 0 
-    
+        grinder.statistics.forCurrentTest.success = 0
 
-def push():      
+def push():
+    ts = current_millis()
     token_nodeId = helper.nodeId
     token_securityToken = grinder.properties.getProperty('server.auth.token', 'test')      
 
@@ -65,13 +85,18 @@ def push():
     if result.statusCode == 200:
         result = httpRequest.PUT(serverPath + '/push' + '?nodeId=' + token_nodeId +
                                 '&securityToken=' + token_securityToken,
-         helper.generateBatchPayload())
+        helper.generateBatchPayload())
         
         resultString = String(String(result.data).toUpperCase())
         
         if result.statusCode != 200 or resultString.contains('=ER') or resultString.contains('=SK'):
             log.warn("Failed to push.  The status code was %d and the response string was %s" % (result.statusCode, resultString))
-            grinder.statistics.forCurrentTest.success = 0        
+            grinder.statistics.forCurrentTest.success = 0
+        else:
+            grinder.statistics.forCurrentTest.addLong("userLong1", 1)
+            grinder.statistics.forCurrentTest.addDouble("userDouble0", (current_millis() - ts) / 1000.0)
+    elif result.statusCode == 670:
+        grinder.statistics.forCurrentTest.addLong("userLong0", 1)
     else:
         grinder.statistics.forCurrentTest.success = 0 
 
@@ -106,5 +131,10 @@ class TestRunner:
     else:
         grinder.logger.info('No location assigned to this agent: %s' % helper.getLocationPropertyKey())
     
+
+
+
+
+
 
 
