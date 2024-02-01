@@ -2,26 +2,27 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin:'application'
 
-// Run the console using: gradle -Pconsole run
-if ( project.hasProperty("console") ) {  
-    mainClassName = 'net.grinder.Console'
-} else {
-    mainClassName = 'net.grinder.Grinder'
+application {
+	// Run the console using: gradle -Pconsole run
+	if ( project.hasProperty("console") ) {  
+	    mainClass = 'net.grinder.Console'
+	} else {
+	    mainClass = 'net.grinder.Grinder'
+	}
 }
 
 repositories {
     mavenCentral()
-    maven {
-        url "http://repository.codehaus.org"
-        url "http://clojars.org/repo"
-    }
+    maven { url "https://maven.jumpmind.com/repo" }
+    maven { url "https://repository.codehaus.org" }
+    maven { url "https://clojars.org/repo" }
 }
 
 dependencies {
-    compile "org.jumpmind.symmetric:symmetric-core:3.5.17"
-    compile "net.sf.grinder:grinder:3.11"
-    compile "ring:ring-core:1.1.0"
-    compile "ring:ring-servlet:1.1.0"
+    implementation "org.jumpmind.symmetric:symmetric-core:3.14.11"
+    implementation "net.sf.grinder:grinder:3.11"
+    implementation "ring:ring-core:1.1.0"
+    implementation "ring:ring-servlet:1.1.0"
 }
 
 run {

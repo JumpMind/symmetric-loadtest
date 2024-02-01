@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -15,7 +16,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jumpmind.db.util.BinaryEncoding;
 import org.jumpmind.symmetric.io.data.Batch;
 import org.jumpmind.symmetric.io.data.Batch.BatchType;
@@ -51,7 +52,7 @@ public class SymmetricProtocolHelper {
         if (!templates.containsKey(name)) {
             String template;
             try {
-                template = FileUtils.readFileToString(new File(name));
+                template = FileUtils.readFileToString(new File(name), Charset.defaultCharset());
                 templates.put(name, template);
             } catch (IOException e) {
                 logger.error("Could not find template for {}", name);
@@ -180,7 +181,7 @@ public class SymmetricProtocolHelper {
     protected ProtocolDataWriter buildProtocolDataWriter(final NodeInfo nodeInfo,
             StringWriter writer) {
 
-        return new ProtocolDataWriter(nodeInfo.nodeId, writer, false) {
+        return new ProtocolDataWriter(nodeInfo.nodeId, writer, false, false, false) {
 
             protected String currentTransactionId = null;
 
