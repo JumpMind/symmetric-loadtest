@@ -54,7 +54,7 @@ log.info('The HTTP request object was created')
 
 def pull():
     ts = current_millis()
-    token_nodeId = helper.nodeId
+    token_nodeId = helper.getNodeId()
     token_securityToken = grinder.properties.getProperty('server.auth.token', 'test')
 
     result = httpRequest.GET(serverPath + '/pull' + '?nodeId=' + token_nodeId +
@@ -73,7 +73,7 @@ def pull():
 
 def push():
     ts = current_millis()
-    token_nodeId = helper.nodeId
+    token_nodeId = helper.getNodeId()
     token_securityToken = grinder.properties.getProperty('server.auth.token', 'test')      
 
     result = httpRequest.HEAD(serverPath + '/push' +

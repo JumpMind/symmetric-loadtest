@@ -21,8 +21,8 @@ repositories {
 dependencies {
     implementation "org.jumpmind.symmetric:symmetric-core:3.14.11"
     implementation "net.sf.grinder:grinder:3.11"
-    implementation "ring:ring-core:1.1.0"
-    implementation "ring:ring-servlet:1.1.0"
+    implementation "ring:ring-core:1.11.0"
+    implementation "ring:ring-servlet:1.11.0"
 }
 
 run {
