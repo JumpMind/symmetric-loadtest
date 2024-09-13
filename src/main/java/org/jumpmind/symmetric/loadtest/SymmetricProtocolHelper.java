@@ -273,7 +273,7 @@ public class SymmetricProtocolHelper {
         }
 
         public void build(StringBuilder csv) {
-            int maxNumberInBatch = getRandomNumber("max.number.of.in.batch." + channelId);
+            int maxNumberInBatch = getRandomNumber("max.number.of.rows.in.batch." + channelId);
 
             csv.append("nodeid,xxxxx\n");
             csv.append("binary,").append(BinaryEncoding.BASE64).append("\n");
