@@ -1,6 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
-apply plugin:'application'
+apply plugin: 'application'
+apply plugin: 'distribution'
 
 application {
 	// Run the console using: gradle -Pconsole run
@@ -23,6 +24,18 @@ dependencies {
     implementation "net.sf.grinder:grinder:3.11"
     implementation "ring:ring-core:1.1.0"
     implementation "ring:ring-servlet:1.1.0"
+}
+
+distributions {
+    if ( project.hasProperty("console") ) {
+        main {
+            contents {
+                into ('script') {
+                    from 'src/main/console'
+                }
+            }
+        }
+    }
 }
 
 run {
