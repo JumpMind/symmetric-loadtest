@@ -1,32 +1,113 @@
-SymmetricDS Grinder Load Test
-==================
-This project demonstrates how you can load test SymmetricDS using [The Grinder] (http://grinder.sourceforge.net) framework.
+SymmetricDS JMeter Load Test
+============================
 
-This example was built as a gradle project and tested from Eclipse.  If you run the `gradle cleanEclipse eclipse` command, the Eclipse project artifacts will be generated and you will be able to import this project as an Eclipse project.
+This project load tests SymmetricDS push/pull sync using [Apache JMeter](https://jmeter.apache.org).
+Each simulated thread acts as a registered SymmetricDS node, running push and pull cycles against a live server.
 
+## Requirements
 
-At the root of the project you can find Eclipse shortcuts that launch the Grinder console and up to three agents.  
+- Java 11+
+- [Apache JMeter 5.6+](https://jmeter.apache.org/download_jmeter.cgi)
+- A running SymmetricDS server with pre-registered test nodes
 
-When running from outside of Eclipse you can install and run agents pointing back to the Grinder console using [instructions] (http://grinder.sourceforge.net/g3/getting-started.html#howtostart) found on the Grinder website.
+## Setup
 
-The load test is driven by the [loadtest.properties] (https://github.com/JumpMind/symmetric-loadtest/raw/master/src/main/console/loadtest.properties) Grinder properties file.  The properties file points to the [loadtest.py] (https://github.com/JumpMind/symmetric-loadtest/raw/master/src/main/console/loadtest.py) load test and contains additional properties that are specific to the SymmetricDS load test.
+### 1. Build the helper JAR
 
-`loadtst.py` uses [SymmetricProtocolHelper.java] (https://github.com/JumpMind/symmetric-loadtest/raw/master/src/main/java/org/jumpmind/symmetric/loadtest/SymmetricProtocolHelper.java).  The helper contains code that supports the SymmetricDS protocol.
+```bash
+./gradlew assemble
+```
 
-The console home can be found at `src/main/console`.  The console shortcut starts the Grinder console with this directory as the working directory.  All test files are hosted here.  They are deployed over the network to agents using the `Distribute->Distribute Files` menu option.  If running agents from the Eclipse shortcuts, those distributed files will show up in `src/main/agent-n`.
+This produces `build/libs/symmetric-loadtest.jar` (a fat JAR containing `SymmetricProtocolHelper` and its dependencies).
 
-A test can be started from the console menu using `Action->Start Processes`.  `loadtest.py` supports two tests: a push test and a pull test.  By default, these tests are run on each worker thread one after another.  After each test has run the worker thread will sleep for a configurable random amount of time.
+### 2. Install the JAR into JMeter
 
-The _pull_ test performs a SymmetricDS pull.  It receives batch data from the server and acknowledges it. 
+Copy the JAR to JMeter's extension directory:
 
-The _push_ test performs a SymmetricDS push.  It uses a configurable template file to generate batch data and pushes it to the server.  The `SymmetricProtocolHelper.java` looks for certain key columns and replaces the data values with generated data.  In order to support your tables, you might need to customize this class.
+```bash
+cp build/libs/symmetric-loadtest.jar $JMETER_HOME/lib/ext/
+```
 
-Both the _push_ and _pull_ jobs are configured via the `loadtest.properties` file.  They assume that nodes have been registered on the server.  The load test tool assumes that all 'testable' nodes have the same sym_node_security node_password.  The password itself is configurable.
+### 3. Pre-register test nodes on the server
 
-The example configuration pushes back a SymmetricDS heartbeat (the `sym_node_host` table).  The template file for the batch data is `heartbeat.csv`.  You use the `channel.names` property to configure the channels you want to _push_.  Channels are comma delimited.  Each channel should have a corresponding `{channel name}.csv` file.
+Each node ID listed in `node.ids` must exist in the server database before running the test.
+Run the following SQL for each node ID (e.g. `00001`):
 
-Each Grinder agent can support multiple processes, which in turn can start multiple threads.  Even though you have multiple agents checking into the console, only the number specified by `grinder.agent` will be used during a run.  `grinder.processes` are the number of processes that will be created.  `grinder.threads` is the number of threads each process will start.
+```sql
+INSERT INTO sym_node (node_id, node_group_id, external_id, sync_enabled)
+  VALUES ('00001', 'source', '00001', 1);
 
-Node ids are also specificed in the `loadtest.properties`.  The `locations.agent.id.X.process.id.X` properties contain a list of location ids.  You can customize how node ids are created in `SymmetricProtocolHelper.java`.  This example will randomly select a location id for the agent and process number that is currently doing work.  It will assign a 'workstation id' as part of the node id based on the thread number.  The thread number is zero padded so that node ids look (for this example) look something like: 30444-002.
+INSERT INTO sym_node_security (node_id, node_password, registration_enabled, registration_time, initial_load_enabled)
+  VALUES ('00001', 'test', 0, NOW(), 0);
+```
 
-The node ids must be preregistered with the central node.  This means they must have a record in sym_node and sym_node_security.  The node_password in sym_node_security must match the password in the properties file.  sync_enabled must be set to 1 in sym_node.
+Also clear `sym_incoming_batch` between test runs, or set `incoming.batches.record.ok.enabled=false`
+on the server to avoid batch ID conflicts.
+
+### 4. Configure the test
+
+Edit the **User Defined Variables** at the top of `src/main/console/loadtest.jmx`, or override
+properties on the JMeter command line with `-J`:
+
+| Variable | Default | Description |
+|---|---|---|
+| `server.url` | `http://localhost:31415` | SymmetricDS server base URL |
+| `server.path` | `/sync/server` | Sync servlet path |
+| `server.auth.token` | `test` | Node password from `sym_node_security` |
+| `target.node.id` | `server` | Server node ID |
+| `node.ids` | `00001,...,00006` | Comma-separated list of client node IDs |
+| `threads` | `6` | Number of concurrent sync threads |
+| `ramp_up_seconds` | `10` | Thread ramp-up time |
+| `duration_seconds` | `120` | Test duration |
+| `channel.names` | `heartbeat` | Channels to push (comma-separated) |
+| `time.between.sync.ms` | `1000` | Delay between push/pull cycles |
+
+### 5. Add channel CSV templates
+
+For each channel in `channel.names`, place a `{channel}.csv` template file in the JMeter working
+directory. The included `heartbeat.csv` is used for the default `heartbeat` channel. Column values
+`NODE_ID`, `HEARTBEAT_TIME`, `CREATE_TIME`, and `ID` are replaced dynamically at runtime.
+
+To test your own tables, copy the CSV format from an existing SymmetricDS batch and add it as
+`{channel}.csv`. You may also need to update `SymmetricProtocolHelper.java` to substitute
+additional column values.
+
+## Running the test
+
+**GUI mode** (for setup and debugging):
+
+```bash
+$JMETER_HOME/bin/jmeter -t src/main/console/loadtest.jmx
+```
+
+**Non-GUI mode** (for actual load testing — much lower overhead):
+
+```bash
+$JMETER_HOME/bin/jmeter -n \
+  -t src/main/console/loadtest.jmx \
+  -l results.csv \
+  -e -o report/ \
+  -Jthreads=20 \
+  -Jduration_seconds=300
+```
+
+JMeter will write a `results.csv` file and generate an HTML report in `report/`.
+
+## What the test does
+
+Each thread:
+1. Initializes a `SymmetricProtocolHelper` and claims a unique node ID from `node.ids`
+2. Loops until the test duration expires:
+   - **Pull**: `GET /pull` to receive batch data, then `POST /ack` to acknowledge
+   - **Push**: `HEAD /push` to check server availability, then `PUT /push` with a generated batch payload
+   - Sleeps for `time.between.sync.ms` milliseconds
+
+The `SymmetricProtocolHelper` generates batch payloads in the SymmetricDS CSV wire format using
+the channel template files, so the server processes them as real sync data.
+
+## Customizing for other tables
+
+Replace or add channel CSV template files in the console directory. For example, to push `order`
+data, create `order.csv` with a sample SymmetricDS batch row and add `order` to `channel.names`.
+If your table has columns that need dynamic values (timestamps, IDs, etc.), extend the `swap()`
+logic in `SymmetricProtocolHelper.java`.

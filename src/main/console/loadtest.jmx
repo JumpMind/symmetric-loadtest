@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="SymmetricDS Load Test">
+      <stringProp name="TestPlan.comments">SymmetricDS push/pull load test. Build the project with `gradle assemble`, then copy build/libs/symmetric-loadtest.jar to $JMETER_HOME/lib/ext/ before running.</stringProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="server.url" elementType="Argument">
+            <stringProp name="Argument.name">server.url</stringProp>
+            <stringProp name="Argument.value">http://localhost:31415</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="server.path" elementType="Argument">
+            <stringProp name="Argument.name">server.path</stringProp>
+            <stringProp name="Argument.value">/sync/target</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="server.auth.token" elementType="Argument">
+            <stringProp name="Argument.name">server.auth.token</stringProp>
+            <stringProp name="Argument.value">test</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="target.node.id" elementType="Argument">
+            <stringProp name="Argument.name">target.node.id</stringProp>
+            <stringProp name="Argument.value">target</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="node.ids" elementType="Argument">
+            <stringProp name="Argument.name">node.ids</stringProp>
+            <stringProp name="Argument.value">00001,00002,00003,00004,00005,00006,00007,00008,00009,00010,00011,00012,00013,00014,00015,00016,00017,00018,00019,00020</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="node.id.unique.per.thread" elementType="Argument">
+            <stringProp name="Argument.name">node.id.unique.per.thread</stringProp>
+            <stringProp name="Argument.value">true</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="channel.names" elementType="Argument">
+            <stringProp name="Argument.name">channel.names</stringProp>
+            <stringProp name="Argument.value">heartbeat</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="max.number.of.batches" elementType="Argument">
+            <stringProp name="Argument.name">max.number.of.batches</stringProp>
+            <stringProp name="Argument.value">1</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="max.number.of.rows.in.batch.heartbeat" elementType="Argument">
+            <stringProp name="Argument.name">max.number.of.rows.in.batch.heartbeat</stringProp>
+            <stringProp name="Argument.value">1</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="batch.id.start" elementType="Argument">
+            <stringProp name="Argument.name">batch.id.start</stringProp>
+            <stringProp name="Argument.value">300000</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="time.between.sync.ms" elementType="Argument">
+            <stringProp name="Argument.name">time.between.sync.ms</stringProp>
+            <stringProp name="Argument.value">1000</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="threads" elementType="Argument">
+            <stringProp name="Argument.name">threads</stringProp>
+            <stringProp name="Argument.value">20</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="ramp_up_seconds" elementType="Argument">
+            <stringProp name="Argument.name">ramp_up_seconds</stringProp>
+            <stringProp name="Argument.value">10</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="duration_seconds" elementType="Argument">
+            <stringProp name="Argument.name">duration_seconds</stringProp>
+            <stringProp name="Argument.value">120</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Sync Nodes">
+        <stringProp name="ThreadGroup.num_threads">${__P(threads,${threads})}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${__P(ramp_up_seconds,${ramp_up_seconds})}</stringProp>
+        <stringProp name="ThreadGroup.duration">${__P(duration_seconds,${duration_seconds})}</stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <intProp name="LoopController.loops">-1</intProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <IfController guiclass="IfControllerPanel" testclass="IfController" testname="Initialize Once Per Thread" enabled="true">
+          <stringProp name="IfController.condition">&quot;${helper_initialized}&quot; != &quot;true&quot;</stringProp>
+          <boolProp name="IfController.evaluateAll">false</boolProp>
+          <boolProp name="IfController.useExpression">false</boolProp>
+        </IfController>
+        <hashTree>
+          <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Initialize Node" enabled="true">
+            <stringProp name="scriptLanguage">groovy</stringProp>
+            <stringProp name="script">
+import org.jumpmind.symmetric.loadtest.SymmetricProtocolHelper
+import java.util.Properties
+
+def symProps = new Properties()
+symProps.setProperty(&quot;node.ids&quot;, props.getProperty(&quot;node.ids&quot;) ?: vars.get(&quot;node.ids&quot;))
+symProps.setProperty(&quot;node.id.unique.per.thread&quot;, props.getProperty(&quot;node.id.unique.per.thread&quot;) ?: vars.get(&quot;node.id.unique.per.thread&quot;))
+symProps.setProperty(&quot;batch.id.start&quot;, props.getProperty(&quot;batch.id.start&quot;) ?: vars.get(&quot;batch.id.start&quot;))
+symProps.setProperty(&quot;channel.names&quot;, props.getProperty(&quot;channel.names&quot;) ?: vars.get(&quot;channel.names&quot;))
+symProps.setProperty(&quot;max.number.of.batches&quot;, props.getProperty(&quot;max.number.of.batches&quot;) ?: vars.get(&quot;max.number.of.batches&quot;))
+symProps.setProperty(&quot;max.number.of.rows.in.batch.heartbeat&quot;, props.getProperty(&quot;max.number.of.rows.in.batch.heartbeat&quot;) ?: vars.get(&quot;max.number.of.rows.in.batch.heartbeat&quot;))
+symProps.setProperty(&quot;target.node.id&quot;, props.getProperty(&quot;target.node.id&quot;) ?: vars.get(&quot;target.node.id&quot;))
+symProps.setProperty(&quot;transaction.id.run.number&quot;, &quot;0&quot;)
+
+def helper = new SymmetricProtocolHelper(symProps, ctx.getThreadNum())
+vars.putObject(&quot;helper&quot;, helper)
+vars.put(&quot;nodeId&quot;, helper.getNodeId())
+vars.put(&quot;helper_initialized&quot;, &quot;true&quot;)
+
+log.info(&quot;Thread &quot; + ctx.getThreadNum() + &quot; initialized with node ID: &quot; + helper.getNodeId())
+SampleResult.setResponseMessage(&quot;Node ID: &quot; + helper.getNodeId())
+            </stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="cacheKey">false</stringProp>
+          </JSR223Sampler>
+          <hashTree/>
+        </hashTree>
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="Pull" enabled="true">
+          <boolProp name="TransactionController.parent">true</boolProp>
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /pull" enabled="true">
+            <stringProp name="HTTPSampler.domain">${__P(server.host,localhost)}</stringProp>
+            <stringProp name="HTTPSampler.port">${__P(server.port,31415)}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.path">${server.path}/pull</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="nodeId" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.name">nodeId</stringProp>
+                  <stringProp name="Argument.value">${nodeId}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                </elementProp>
+                <elementProp name="securityToken" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.name">securityToken</stringProp>
+                  <stringProp name="Argument.value">${server.auth.token}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                  <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="Build Ack Body" enabled="true">
+              <stringProp name="scriptLanguage">groovy</stringProp>
+              <stringProp name="script">
+if (prev.getResponseCode() == &quot;200&quot;) {
+    def helper = vars.getObject(&quot;helper&quot;)
+    def responseBody = prev.getResponseDataAsString()
+    def ackMap = helper.generateAck(responseBody)
+    def ackBody = ackMap.collect { k, v -&gt;
+        URLEncoder.encode(k, &quot;UTF-8&quot;) + &quot;=&quot; + URLEncoder.encode(v, &quot;UTF-8&quot;)
+    }.join(&quot;&amp;&quot;)
+    vars.put(&quot;ackBody&quot;, ackBody)
+    vars.put(&quot;pullSuccess&quot;, &quot;true&quot;)
+} else {
+    vars.put(&quot;pullSuccess&quot;, &quot;false&quot;)
+    vars.put(&quot;ackBody&quot;, &quot;&quot;)
+}
+              </stringProp>
+              <stringProp name="parameters"></stringProp>
+              <stringProp name="filename"></stringProp>
+              <stringProp name="cacheKey">false</stringProp>
+            </JSR223PostProcessor>
+            <hashTree/>
+          </hashTree>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="Ack If Pull Succeeded" enabled="true">
+            <stringProp name="IfController.condition">&quot;${pullSuccess}&quot; == &quot;true&quot;</stringProp>
+            <boolProp name="IfController.evaluateAll">false</boolProp>
+            <boolProp name="IfController.useExpression">false</boolProp>
+          </IfController>
+          <hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /ack" enabled="true">
+              <stringProp name="HTTPSampler.domain">${__P(server.host,localhost)}</stringProp>
+              <stringProp name="HTTPSampler.port">${__P(server.port,31415)}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.path">${server.path}/ack?nodeId=${nodeId}&amp;securityToken=${server.auth.token}</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">${ackBody}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="Push" enabled="true">
+          <boolProp name="TransactionController.parent">true</boolProp>
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="HEAD /push" enabled="true">
+            <stringProp name="HTTPSampler.domain">${__P(server.host,localhost)}</stringProp>
+            <stringProp name="HTTPSampler.port">${__P(server.port,31415)}</stringProp>
+            <stringProp name="HTTPSampler.protocol">http</stringProp>
+            <stringProp name="HTTPSampler.path">${server.path}/push?nodeId=${nodeId}&amp;securityToken=${server.auth.token}</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <stringProp name="HTTPSampler.method">HEAD</stringProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+              <collectionProp name="Arguments.arguments"/>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="Generate Push Payload" enabled="true">
+              <stringProp name="scriptLanguage">groovy</stringProp>
+              <stringProp name="script">
+if (prev.getResponseCode() == &quot;200&quot;) {
+    def helper = vars.getObject(&quot;helper&quot;)
+    def payload = helper.generateBatchPayload()
+    vars.put(&quot;pushPayload&quot;, new String(payload, &quot;UTF-8&quot;))
+    vars.put(&quot;pushReady&quot;, &quot;true&quot;)
+} else {
+    vars.put(&quot;pushReady&quot;, &quot;false&quot;)
+}
+              </stringProp>
+              <stringProp name="parameters"></stringProp>
+              <stringProp name="filename"></stringProp>
+              <stringProp name="cacheKey">false</stringProp>
+            </JSR223PostProcessor>
+            <hashTree/>
+          </hashTree>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="Push If Server Ready" enabled="true">
+            <stringProp name="IfController.condition">&quot;${pushReady}&quot; == &quot;true&quot;</stringProp>
+            <boolProp name="IfController.evaluateAll">false</boolProp>
+            <boolProp name="IfController.useExpression">false</boolProp>
+          </IfController>
+          <hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /push" enabled="true">
+              <stringProp name="HTTPSampler.domain">${__P(server.host,localhost)}</stringProp>
+              <stringProp name="HTTPSampler.port">${__P(server.port,31415)}</stringProp>
+              <stringProp name="HTTPSampler.protocol">http</stringProp>
+              <stringProp name="HTTPSampler.path">${server.path}/push?nodeId=${nodeId}&amp;securityToken=${server.auth.token}</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <stringProp name="HTTPSampler.method">PUT</stringProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="" elementType="HTTPArgument">
+                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                    <stringProp name="Argument.value">${pushPayload}</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="Check Push Response" enabled="true">
+                <stringProp name="scriptLanguage">groovy</stringProp>
+                <stringProp name="script">
+def response = prev.getResponseDataAsString().toUpperCase()
+if (prev.getResponseCode() != &quot;200&quot; || response.contains(&quot;=ER&quot;) || response.contains(&quot;=SK&quot;)) {
+    prev.setSuccessful(false)
+    log.warn(&quot;Push failed for node &quot; + vars.get(&quot;nodeId&quot;) + &quot;: &quot; + prev.getResponseCode() + &quot; - &quot; + prev.getResponseDataAsString())
+}
+                </stringProp>
+                <stringProp name="parameters"></stringProp>
+                <stringProp name="filename"></stringProp>
+                <stringProp name="cacheKey">false</stringProp>
+              </JSR223PostProcessor>
+              <hashTree/>
+            </hashTree>
+          </hashTree>
+        </hashTree>
+        <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Inter-Sync Delay">
+          <stringProp name="ConstantTimer.delay">${__P(time.between.sync.ms,${time.between.sync.ms})}</stringProp>
+          <stringProp name="RandomTimer.range">0</stringProp>
+        </UniformRandomTimer>
+        <hashTree/>
+        <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename">results.csv</stringProp>
+        </ResultCollector>
+        <hashTree/>
+        <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

@@ -1,48 +1,40 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'application'
-apply plugin: 'distribution'
-
-application {
-	// Run the console using: gradle -Pconsole run
-	if ( project.hasProperty("console") ) {  
-	    mainClass = 'net.grinder.Console'
-	} else {
-	    mainClass = 'net.grinder.Grinder'
-	}
+plugins {
+    id 'java'
 }
 
 repositories {
     mavenCentral()
-    maven { url "https://maven.jumpmind.com/repo" }
-    maven { url "https://repository.codehaus.org" }
-    maven { url "https://clojars.org/repo" }
 }
 
 dependencies {
-    implementation "org.jumpmind.symmetric:symmetric-core:3.14.11"
-    implementation "net.sf.grinder:grinder:3.11"
-    implementation "ring:ring-core:1.1.0"
-    implementation "ring:ring-servlet:1.1.0"
+    // Local symmetric-ds JARs — copy from symmetric-ds build output into lib/
+    implementation fileTree(dir: 'lib', include: '*.jar')
+
+    // Third-party deps pulled in by symmetric-core/io/db (versions from symmetric-ds common.gradle)
+    implementation "org.springframework:spring-core:6.2.17"
+    implementation "org.springframework:spring-beans:6.2.17"
+    implementation "com.google.code.gson:gson:2.13.1"
+    implementation "com.google.guava:guava:33.2.0-android"
+    implementation "org.eclipse.angus:jakarta.mail:2.0.4"
+    implementation "commons-io:commons-io:2.19.0"
+    implementation "org.apache.commons:commons-lang3:3.18.0"
+    compileOnly "org.slf4j:slf4j-api:2.0.17"
 }
 
-distributions {
-    if ( project.hasProperty("console") ) {
-        main {
-            contents {
-                into ('script') {
-                    from 'src/main/console'
-                }
-            }
-        }
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+// Build a fat JAR with all runtime deps bundled so it can be dropped into $JMETER_HOME/lib/ext/
+jar {
+    archiveBaseName.set('symmetric-loadtest')
+    archiveVersion.set('')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
-}
-
-run {
-    if ( project.hasProperty("console") ) {  
-        workingDir = 'src/main/console'
-        jvmArgs '-Djava.awt.headless=false'
-    } else {
-        workingDir = 'src/main/agent-0'
-    }    
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+    // Exclude SLF4J — JMeter provides its own logging
+    exclude 'org/slf4j/**', 'META-INF/services/org.slf4j.*'
 }
